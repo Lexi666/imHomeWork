@@ -26,13 +26,26 @@
         </div>
     </div>
     <div id="list">
-        <h2>Today
+        <h2 class="list-item-add">Today
             <span>
-                {{ list.length }}
+                {{ list.length }}{{urgentCount}}{{importantCount}}{{whateverCount}}
+                <i class="material-icons" @click="showAdd = true" v-show="!showAdd">
+                    add
+                </i>
             </span>
         </h2>
         <div class="list-item_position">
-            <list-item v-for="item of list" :list="item" :key="item.id">
+            <div v-show="showAdd" class="list-item_action list-item_style default">
+                <input v-model="newItem" type="text" class="list-item_content">
+                <i class="material-icons" @click="cancelListItem(newItem)">
+                    close
+                </i>
+                <i class="material-icons" @click="saveListItem(newItem)">
+                    done
+                </i>
+            </div>
+            <list-item v-for="(item, index) of list" :list="item" :key="item.id" @delete="deleteItem(index)"
+                @edit="editItem(index)">
             </list-item>
         </div>
     </div>
@@ -54,14 +67,6 @@
                 { name: "Important", count: 0, colorType: "blue" },
                 { name: "whatever", count: 0, colorType: "purple" },
             ]
-        },
-        methods: {
-            countCategory: function () {
-                console.log(this.categoryList);
-            }
-        },
-        created: function () {
-            this.countCategory()
         }
     })
     Vue.component("list-item", {
@@ -70,8 +75,8 @@
             `
             <div class="list-item_action list-item_style" 
                 :class="list.categoryType" 
-                @mouseover="list.action = !list.action" 
-                @mouseout="list.action = !list.action">
+                @mouseover="list.action = true" 
+                @mouseout="list.action = false">
                 <i v-if="!list.finished" 
                     class="material-icons" 
                     @click="list.finished = true">
@@ -80,35 +85,92 @@
                 <i v-if="list.finished" class="material-icons" @click="list.finished = false">
                     check_circle
                 </i>
-                <span class="list-item_content" :class="{done:list.finished}" for="check">
+                <span v-show="list.showEdit === false" class="list-item_content" :class="{done:list.finished}">
                     {{list.text}}
                 </span>
-                <i v-show="list.action" class="material-icons delete">
+                <span v-show="list.showEdit === true">
+                   <input v-model="list.text" @keyup.enter="list.showEdit = false">
+                </span>
+                <i v-show="list.action" class="material-icons edit" @click="editListItem">
                     edit
                 </i>
-                <i v-show="list.action" class="material-icons edit">
+                <i v-show="list.action" class="material-icons delete" @click="deleteListItem">
                     delete_outline
                 </i>
             </div>
-        `
+        `,
+        methods: {
+            deleteListItem: function () {
+                let index = this.list.index;
+                this.$emit('delete', index);
+            },
+            editListItem: function () {
+                let index = this.list.index;
+                this.$emit('edit', index);
+            }
+        }
     })
     var listApp = new Vue({
         el: "#list",
         data: {
+            newItem: "",
+            showAdd: false,
             list: [
-                { categoryType: "urgent", text: "Buy some noodles", finished: false, action: false },
-                { categoryType: "important", text: "Make a dentist appointment", finished: false, action: false },
-                { categoryType: "whatever", text: "Clean House", finished: true, action: false },
-                { categoryType: "whatever", text: "Get the latest breaking news", finished: false, action: false }
+                { categoryType: "urgent", text: "Buy some noodles", finished: false, action: false, showEdit: false },
+                { categoryType: "important", text: "Make a dentist appointment", finished: false, action: false, showEdit: false },
+                { categoryType: "whatever", text: "Clean House", finished: true, action: false, showEdit: false },
+                { categoryType: "whatever", text: "Get the latest breaking news", finished: false, action: false, showEdit: false }
             ]
+        },
+        methods: {
+            saveListItem: function (newItem) {
+                this.showAdd = false;
+                var newObj = {
+                    categoryType: "urgent",
+                    text: this.newItem,
+                    finished: false,
+                    action: false
+                }
+                this.list.unshift(newObj);
+                this.newItem = "";
+            },
+            cancelListItem(newItem) {
+                this.newItem = "";
+            },
+            deleteItem: function (index) {
+                this.list.splice(index, 1);
+            },
+            editItem: function (index) {
+                this.list[index].showEdit = true;
+            },
+            changeItem: function () {
+                countCategory();
+            },
+        },
+        computed: {
+            urgentCount: function () {
+                var _this = this;
+                var urgentCount = Object.keys(this.list).filter(function (value) {
+                    return _this.list[value].categoryType === "urgent";
+                }).length;
+                categoryApp.categoryList[0].count = urgentCount;
+            },
+            importantCount: function () {
+                var _this = this;
+                var importantCount = Object.keys(this.list).filter(function (value) {
+                    return _this.list[value].categoryType === "important";
+                }).length;
+                categoryApp.categoryList[1].count = importantCount;
+            },
+            whateverCount: function () {
+                var _this = this;
+                var whateverCount = Object.keys(this.list).filter(function (value) {
+                    return _this.list[value].categoryType === "whatever";
+                }).length;
+                categoryApp.categoryList[2].count = whateverCount;
+            },
         }
     })
-
-    // function beforeMount() {
-    //     this.countCategory();
-    //     console.log('in');
-
-    // }
 </script>
 <style>
     body {
@@ -140,9 +202,8 @@
     }
 
     .category-item_style {
-        /* vertical-align: text-top; */
         min-width: 100px;
-        max-width: 320px;
+        max-width: 360px;
         color: cornsilk;
         width: 100%;
         padding: 1.4em;
@@ -183,18 +244,52 @@
 
     }
 
+    #list {
+        width: 95%;
+        max-width: 1280px;
+    }
+
+    .list-item-add i {
+        padding: 0.2em;
+        vertical-align: middle;
+        cursor: pointer;
+        float: right;
+    }
+
+    .list-item-add i:hover {
+        background-color: #e8dbff;
+        border-radius: 50%;
+    }
+
     .list-item_position {
         margin: 1.5em 0;
     }
 
     .list-item_style {
         min-width: 200px;
-        width: 80%;
         padding: 0.8em 1em;
         margin: 1em;
         box-shadow: 0 0 0.8em 0.1em #06011f2a;
         border-radius: 0.5em;
         opacity: 0.8;
+    }
+
+    input {
+        min-width: 240px;
+        line-height: 1.5em;
+        font-size: 1em;
+        font-family: 'Oxygen', sans-serif;
+        color: rgb(83, 83, 85);
+        min-width: 320px;
+        vertical-align: middle;
+        margin-bottom: 0.2em;
+        margin-left: 0.3em;
+        border: none;
+        border-bottom: 0.1em solid #B5B8BF;
+    }
+
+    input:focus {
+        outline: none;
     }
 
     .list-item_style.urgent {
@@ -209,10 +304,13 @@
         border-left: 1.2em double #a989e6;
     }
 
+    .list-item_style.default {
+        border-left: 1.2em double rgb(83, 83, 85);
+    }
+
     .list-item_style:hover {
         box-shadow: 0 0em 1.2em 0.1em #06011f33;
         opacity: 1;
-
     }
 
     .list-item_content {
@@ -231,7 +329,6 @@
     }
 
     .list-item_style .material-icons:hover {
-        /* background-color: rgb(238, 238, 238); */
         background-color: #e8dbff;
         border-radius: 50%;
     }
