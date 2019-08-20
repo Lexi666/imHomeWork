@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+<head>
+    <link rel="stylesheet" href="css/jquery.toast.css">
+    <link href="https://fonts.googleapis.com/css?family=Oxygen:300,400,700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>To-Do List</title>
+</head>
+
+<body>
+    <h1>My To-Do List</h1>
+    <div id="category">
+        <h2>Projects
+            <span>
+                {{categoryList.length}}
+            </span>
+        </h2>
+        <div class="category-item_position">
+            <category-item v-for="item of categoryList" :category="item" :key="item.id">
+            </category-item>
+        </div>
+    </div>
+    <div id="list">
+        <h2>Today
+            <span>
+                {{ list.length }}
+            </span>
+        </h2>
+        <div class="list-item_position">
+            <list-item v-for="item of list" :list="item" :key="item.id">
+            </list-item>
+        </div>
+    </div>
+</body>
+<script>
+    Vue.component("category-item", {
+        props: ["category"],
+        template: `
+        <div :class="category.colorType" class="category-item_style">
+            <p class="category-item_subtitle">{{ category.name }} </p>
+            <p class="category-item_content">{{ category.count }} task </p>
+         </div>`
+    })
+    var categoryApp = new Vue({
+        el: "#category",
+        data: {
+            categoryList: [
+                { name: "Urgent", count: 0, colorType: "pink" },
+                { name: "Important", count: 0, colorType: "blue" },
+                { name: "whatever", count: 0, colorType: "purple" },
+            ]
+        },
+        methods: {
+            countCategory: function () {
+                console.log(this.categoryList);
+            }
+        },
+        created: function () {
+            this.countCategory()
+        }
+    })
+    Vue.component("list-item", {
+        props: ["list"],
+        template:
+            `
+            <div class="list-item_action list-item_style" 
+                :class="list.categoryType" 
+                @mouseover="list.action = !list.action" 
+                @mouseout="list.action = !list.action">
+                <i v-if="!list.finished" 
+                    class="material-icons" 
+                    @click="list.finished = true">
+                    check_circle_outline
+                </i>
+                <i v-if="list.finished" class="material-icons" @click="list.finished = false">
+                    check_circle
+                </i>
+                <span class="list-item_content" :class="{done:list.finished}" for="check">
+                    {{list.text}}
+                </span>
+                <i v-show="list.action" class="material-icons delete">
+                    edit
+                </i>
+                <i v-show="list.action" class="material-icons edit">
+                    delete_outline
+                </i>
+            </div>
+        `
+    })
+    var listApp = new Vue({
+        el: "#list",
+        data: {
+            list: [
+                { categoryType: "urgent", text: "Buy some noodles", finished: false, action: false },
+                { categoryType: "important", text: "Make a dentist appointment", finished: false, action: false },
+                { categoryType: "whatever", text: "Clean House", finished: true, action: false },
+                { categoryType: "whatever", text: "Get the latest breaking news", finished: false, action: false }
+            ]
+        }
+    })
+
+    // function beforeMount() {
+    //     this.countCategory();
+    //     console.log('in');
+
+    // }
+</script>
+<style>
+    body {
+        font-family: 'Oxygen', sans-serif;
+        color: rgb(83, 83, 85)
+    }
+
+
+    h2 {
+        margin: 1em 0.6em 0.1em;
+    }
+
+    h1 {
+        font-size: 2.4em;
+        margin: 1em 0.4em 1em;
+    }
+
+    h2>span {
+        color: #B5B8BF;
+        margin-left: 0.2em;
+        font-size: 0.9em;
+    }
+
+    .category-item_position {
+        overflow-x: auto;
+        display: flex;
+        width: 100%;
+        padding: 0.8em 0.4em;
+    }
+
+    .category-item_style {
+        /* vertical-align: text-top; */
+        min-width: 100px;
+        max-width: 320px;
+        color: cornsilk;
+        width: 100%;
+        padding: 1.4em;
+        margin: 0.8em 0.6em;
+        box-shadow: 0 0.3em 1.6em 0.1em #06011f3d;
+        border-radius: 0.5em;
+        opacity: 0.8;
+    }
+
+    .category-item_style:hover {
+        color: white;
+        box-shadow: 0 0.3em 1.6em 0.2em #06011f2a;
+        opacity: 1;
+        padding: 1.4em 4.2em 1.4em 1.4em;
+    }
+
+    .category-item_style.pink {
+        background-color: #F4969E;
+    }
+
+    .category-item_style.blue {
+        background-color: #7DA4D7;
+    }
+
+    .category-item_style.purple {
+        background-color: #a989e6;
+    }
+
+    .category-item_subtitle {
+        margin: 1em 0;
+        line-height: 1;
+        font-size: 1.2em;
+        font-weight: 700;
+    }
+
+    .category-item_content {
+        font-size: 1em;
+
+    }
+
+    .list-item_position {
+        margin: 1.5em 0;
+    }
+
+    .list-item_style {
+        min-width: 200px;
+        width: 80%;
+        padding: 0.8em 1em;
+        margin: 1em;
+        box-shadow: 0 0 0.8em 0.1em #06011f2a;
+        border-radius: 0.5em;
+        opacity: 0.8;
+    }
+
+    .list-item_style.urgent {
+        border-left: 1.2em double #F4969E;
+    }
+
+    .list-item_style.important {
+        border-left: 1.2em double #7DA4D7;
+    }
+
+    .list-item_style.whatever {
+        border-left: 1.2em double #a989e6;
+    }
+
+    .list-item_style:hover {
+        box-shadow: 0 0em 1.2em 0.1em #06011f33;
+        opacity: 1;
+
+    }
+
+    .list-item_content {
+        vertical-align: middle;
+        margin-left: 0.3em;
+    }
+
+    .list-item_content.done {
+        text-decoration: line-through;
+    }
+
+    .list-item_style .material-icons {
+        padding: 0.2em;
+        vertical-align: middle;
+        cursor: pointer;
+    }
+
+    .list-item_style .material-icons:hover {
+        /* background-color: rgb(238, 238, 238); */
+        background-color: #e8dbff;
+        border-radius: 50%;
+    }
+
+    .list-item_style .material-icons:active {
+        color: darkmagenta;
+    }
+
+    .list-item_style .material-icons.delete,
+    .list-item_style .material-icons.edit {
+        float: right;
+        margin-left: 0.3em;
+    }
+</style>
+
+</html>
