@@ -29,18 +29,22 @@
         <h2 class="list-item-add">Today
             <span>
                 {{ list.length }}{{urgentCount}}{{importantCount}}{{whateverCount}}
-                <i class="material-icons" @click="showAdd = true" v-show="!showAdd">
+                <i class="material-icons" @click="showAddItem" v-show="!isAddItem.showAdd">
                     add
                 </i>
             </span>
         </h2>
         <div class="list-item_position">
-            <div v-show="showAdd" class="list-item_action list-item_style default">
-                <input v-model="newItem" type="text" class="list-item_content">
-                <i class="material-icons" @click="cancelListItem(newItem)">
+            <div v-if="isAddItem.showAdd" class="list-item_action list-item_style"
+                :class="{default:isDefault, urgent:isUrgent, important:isImportant, whatever:isWhatever}">
+                <i class="material-icons" @click="changeCategoryColor">
+                    outlined_flag
+                </i>
+                <input ref="submit_text" v-model="newItem" type="text" class="list-item_content">
+                <i class="material-icons" @click="cancelListItem">
                     close
                 </i>
-                <i class="material-icons" @click="saveListItem(newItem)">
+                <i class="material-icons" @click.prevent="saveListItem">
                     done
                 </i>
             </div>
@@ -113,8 +117,14 @@
     var listApp = new Vue({
         el: "#list",
         data: {
+            isDefault: true,
+            isImportant: false,
+            isUrgent: false,
+            isWhatever: false,
             newItem: "",
-            showAdd: false,
+            isAddItem: {
+                showAdd: false
+            },
             list: [
                 { categoryType: "urgent", text: "Buy some noodles", finished: false, action: false, showEdit: false },
                 { categoryType: "important", text: "Make a dentist appointment", finished: false, action: false, showEdit: false },
@@ -123,18 +133,42 @@
             ]
         },
         methods: {
-            saveListItem: function (newItem) {
-                this.showAdd = false;
+            showAddItem: function () {
+                this.isAddItem.showAdd = true;
+                this.isDefault = true;
+                this.isImportant = false;
+                this.isUrgent = false;
+                this.isWhatever = false;
+            },
+            changeCategoryColor: function () {
+                if (this.isDefault) {
+                    this.isDefault = false;
+                    this.isImportant = true;
+                } else if (this.isImportant) {
+                    this.isImportant = false;
+                    this.isUrgent = true;
+                } else if (this.isUrgent) {
+                    this.isUrgent = false;
+                    this.isWhatever = true;
+                } else {
+                    this.isWhatever = false;
+                    this.isImportant = true;
+                }
+            },
+            saveListItem: function () {
                 var newObj = {
                     categoryType: "urgent",
-                    text: this.newItem,
+                    text: this.$refs.submit_text.value,
                     finished: false,
-                    action: false
+                    action: false,
+                    showEdit: false
                 }
                 this.list.unshift(newObj);
+                this.isAddItem.showAdd = false;
                 this.newItem = "";
             },
-            cancelListItem(newItem) {
+            cancelListItem: function () {
+                this.isAddItem.showAdd = false;
                 this.newItem = "";
             },
             deleteItem: function (index) {
