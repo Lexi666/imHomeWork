@@ -156,8 +156,18 @@
                 }
             },
             saveListItem: function () {
+                var categoryType = "";
+                if (this.isDefault) {
+                    categoryType = "whatever";
+                } else if (this.isImportant) {
+                    categoryType = "important";
+                } else if (this.isUrgent) {
+                    categoryType = "urgent";
+                } else {
+                    categoryType = "whatever";
+                }
                 var newObj = {
-                    categoryType: "urgent",
+                    categoryType: categoryType,
                     text: this.$refs.submit_text.value,
                     finished: false,
                     action: false,
